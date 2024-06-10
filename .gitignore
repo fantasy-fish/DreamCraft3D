@@ -192,3 +192,9 @@ load/tets/256_tets.npz
 
 # dataset
 dataset/
+
+# images
+images/
+
+# outputs
+outputs/

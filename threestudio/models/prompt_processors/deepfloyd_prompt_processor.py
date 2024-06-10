@@ -65,8 +65,8 @@ class DeepFloydPromptProcessor(PromptProcessor):
             torch_dtype=torch.float16,  # suppress warning
             load_in_8bit=True,
             variant="8bit",
-            device_map="cpu",
-        #    llm_int8_enable_fp32_cpu_offload=True
+            device_map="auto",
+            llm_int8_enable_fp32_cpu_offload=True
         )
         with torch.no_grad():
             text_inputs = tokenizer(

@@ -1,3 +1,7 @@
+'''
+python3 -m carvekit  -i images/0527/DamienXu.png -o images/0527/DamienXu_rgba.png \
+    --device cuda --net basnet --seg_mask_size 320
+'''
 import os
 import sys
 import cv2
@@ -15,28 +19,54 @@ from PIL import Image
 class BackgroundRemoval():
     def __init__(self, device='cuda'):
 
-        from carvekit.api.high import HiInterface
-        self.interface = HiInterface(
-            object_type="object",  # Can be "object" or "hairs-like".
-            batch_size_seg=5,
-            batch_size_matting=1,
-            device=device,
-            seg_mask_size=640,  # Use 640 for Tracer B7 and 320 for U2Net
-            matting_mask_size=2048,
-            trimap_prob_threshold=231,
-            trimap_dilation=30,
-            trimap_erosion_iters=5,
-            fp16=True,
-        )
+        # from carvekit.api.high import HiInterface
+        # self.interface = HiInterface(
+        #     object_type="object",  # Can be "object" or "hairs-like".
+        #     batch_size_seg=5,
+        #     batch_size_matting=1,
+        #     device=device,
+        #     seg_mask_size=640,  # Use 640 for Tracer B7 and 320 for U2Net
+        #     matting_mask_size=2048,
+        #     trimap_prob_threshold=231,
+        #     trimap_dilation=30,
+        #     trimap_erosion_iters=5,
+        #     fp16=True,
+        # )
+        # from carvekit.api.interface import Interface
+        # from carvekit.ml.wrap.fba_matting import FBAMatting
+        # from carvekit.ml.wrap.basnet import BASNet
+        # from carvekit.pipelines.postprocessing import MattingMethod
+        # from carvekit.pipelines.preprocessing import PreprocessingStub
+        # from carvekit.trimap.generator import TrimapGenerator
+        # seg_net = BASNET(device='cuda',
+        #                 input_image_size=320,
+        #                 batch_size=1)
+
+        # fba = FBAMatting(device='cuda',
+        #                 input_tensor_size=2048,
+        #                 batch_size=1)
+
+        # trimap = TrimapGenerator()
+
+        # preprocessing = PreprocessingStub()
+
+        # postprocessing = MattingMethod(matting_module=fba,
+        #                             trimap_generator=trimap,
+        #                             device='cpu')
+
+        # self.interface = Interface(pre_pipe=preprocessing,
+        #                     post_pipe=postprocessing,
+        #                     seg_pipe=seg_net)
+        pass
 
     @torch.no_grad()
     def __call__(self, image):
         # image: [H, W, 3] array in [0, 255].
-        image = Image.fromarray(image)
+        # image = Image.fromarray(image)
 
-        image = self.interface([image])[0]
-        image = np.array(image)
-
+        # image = self.interface([image])[0]
+        # image = np.array(image)
+    
         return image
 
 class BLIP2():
@@ -115,20 +145,24 @@ class DPT():
 
 def preprocess_single_image(img_path, args):
     out_dir = os.path.dirname(img_path)
-    out_rgba = os.path.join(out_dir, os.path.basename(img_path).split('.')[0] + '_rgba.png')
-    out_depth = os.path.join(out_dir, os.path.basename(img_path).split('.')[0] + '_depth.png')
-    out_normal = os.path.join(out_dir, os.path.basename(img_path).split('.')[0] + '_normal.png')
-    out_caption = os.path.join(out_dir, os.path.basename(img_path).split('.')[0] + '_caption.txt')
+    out_rgba = os.path.join(out_dir, os.path.basename(img_path).split('.')[0].split('_')[0] + '_rgba.png')
+    out_depth = os.path.join(out_dir, os.path.basename(img_path).split('.')[0].split('_')[0] + '_depth.png')
+    out_normal = os.path.join(out_dir, os.path.basename(img_path).split('.')[0].split('_')[0] + '_normal.png')
+    out_caption = os.path.join(out_dir, os.path.basename(img_path).split('.')[0].split('_')[0] + '_caption.txt')
 
     # load image
     print(f'[INFO] loading image {img_path}...')
 
     # check the exisiting files
     if os.path.isfile(out_rgba) and os.path.isfile(out_depth) and os.path.isfile(out_normal):
-        print(f"{img_path} has already been here!")
-        return
-    print(img_path)
+        if opt.do_caption and os.path.isfile(out_caption):
+            print(f"{img_path} has already been here!")
+            return
+        if not opt.do_caption:
+            print(f"{img_path} has already been here!")
+            return
     image = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+    # carved_image = cv2.imread(out_rgba, cv2.IMREAD_UNCHANGED)
     carved_image = None
 
     if image.shape[-1] == 4:
